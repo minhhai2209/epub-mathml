@@ -19,7 +19,7 @@ async function updateFile(filePath) {
     const img = $(`<img src="${src}"/>`);
     $(math).replaceWith(img);
   }
-  fs.writeFileSync(filePath, $.html());
+  fs.writeFileSync(filePath, $.html(), { encoding: "utf-8" });
 }
 
 (async function () {
