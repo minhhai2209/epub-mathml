@@ -1,3 +1,5 @@
+Books/
+output/
+batch1/
 node_modules/
-book/
-*.epub
+output.zip

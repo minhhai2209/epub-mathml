@@ -1,8 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const cheerio = require("cheerio");
+const { exec } = require("child_process");
 
 const { renderMath } = require("./renderer");
+
+const inputRoot = path.join(__dirname, "Books");
+const outputRoot = path.join(__dirname, "output");
 
 async function updateFile(filePath) {
   const data = fs.readFileSync(filePath, { encoding: "utf-8" });
@@ -22,8 +26,8 @@ async function updateFile(filePath) {
   fs.writeFileSync(filePath, $.html(), { encoding: "utf-8" });
 }
 
-(async function () {
-  const dir = path.join(__dirname, "book", "OEBPS");
+async function renderMathML(bookTitle) {
+  const dir = path.join(inputRoot, bookTitle, "OEBPS");
   const fileNames = [];
   fs.readdirSync(dir).forEach((fileName) => {
     fileNames.push(fileName);
@@ -34,5 +38,39 @@ async function updateFile(filePath) {
       const filePath = path.join(dir, fileName);
       await updateFile(filePath);
     }
+  }
+}
+
+function getBookTitles() {
+  const bookTitles = [];
+  fs.readdirSync(inputRoot).forEach((fileName) => {
+    bookTitles.push(fileName);
+  });
+  return bookTitles;
+}
+
+function createEpubFile(bookTitle) {
+  const cwd = path.join(inputRoot, bookTitle);
+  const epubPath = path.join(outputRoot, `${bookTitle}.epub`);
+  const cmd = `zip -r "${epubPath}" *`;
+  exec(cmd, { cwd }, (error, stdout, stderr) => {
+    if (error) {
+      console.error(error.message);
+      return;
+    }
+    if (stderr) {
+      console.error(stderr);
+      return;
+    }
+    console.log(stdout);
+  });
+}
+
+(async function () {
+  const bookTitles = getBookTitles();
+  for (let bookTitle of bookTitles) {
+    console.log(bookTitle);
+    await renderMathML(bookTitle);
+    createEpubFile(bookTitle);
   }
 })();
